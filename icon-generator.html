@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <h2>Right-click each canvas and "Save Image As..."</h2>
+    <div>
+        <p>Save as: icon-192.png</p>
+        <canvas id="icon192" width="192" height="192"></canvas>
+    </div>
+    <div>
+        <p>Save as: icon-512.png</p>
+        <canvas id="icon512" width="512" height="512"></canvas>
+    </div>
+
+    <script>
+        function createIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Background
+            ctx.fillStyle = '#1abc9c';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Soccer ball
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size*0.35, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Pentagon pattern (simplified)
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = `bold ${size*0.5}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('⚽', size/2, size/2);
+        }
+        
+        createIcon('icon192', 192);
+        createIcon('icon512', 512);
+    </script>
+</body>
+</html>

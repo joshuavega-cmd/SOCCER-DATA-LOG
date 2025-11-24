@@ -1,0 +1,2171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Live game tagging for soccer coaches">
+    <meta name="theme-color" content="#1abc9c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TagPad">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>Game Tagging Pad</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e8ecef;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        /* Landing Page Styles */
+        .landing-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .landing-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .landing-header {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .landing-header h1 {
+            font-size: 32px;
+            margin: 0 0 10px 0;
+        }
+        
+        .landing-header p {
+            font-size: 16px;
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .landing-form {
+            padding: 40px 30px;
+        }
+        
+        .form-field {
+            margin-bottom: 25px;
+        }
+        
+        .form-field label {
+            display: block;
+            color: #2c3e50;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        
+        .form-field input,
+        .form-field select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: white;
+            color: #2c3e50;
+        }
+        
+        .form-field input:focus,
+        .form-field select:focus {
+            outline: none;
+            border-color: #1abc9c;
+            box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.1);
+        }
+        
+        .landing-submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: #1abc9c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(26, 188, 156, 0.3);
+        }
+        
+        .landing-submit-btn:hover {
+            background: #16a085;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(26, 188, 156, 0.4);
+        }
+        
+        .landing-submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Game Info Bar */
+        .game-info-bar {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .game-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .game-info-label {
+            font-size: 12px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .game-info-value {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .edit-game-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .edit-game-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #f5f7fa;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: white;
+            color: #2c3e50;
+            padding: 25px;
+            text-align: center;
+            border-bottom: 1px solid #e1e8ed;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .controls {
+            padding: 20px;
+            background: white;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #e1e8ed;
+        }
+        
+        .timer-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            background: white;
+            color: #2c3e50;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .start-btn {
+            background: white;
+            color: #2c3e50;
+        }
+        
+        .start-btn:hover {
+            background: #1abc9c;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(26,188,156,0.3);
+        }
+        
+        .pause-btn {
+            background: white;
+            color: #2c3e50;
+        }
+        
+        .pause-btn:hover {
+            background: #95a5a6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(149,165,166,0.3);
+        }
+        
+        .reset-btn {
+            background: white;
+            color: #e74c3c;
+        }
+        
+        .reset-btn:hover {
+            background: #e74c3c;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(231,76,60,0.3);
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 25px;
+            background: #f5f7fa;
+        }
+        
+        .tag-button {
+            padding: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            color: #2c3e50;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .tag-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .tag-button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-loss { background: white; color: #e74c3c; }
+        .btn-loss:hover { background: #e74c3c; color: white; }
+        
+        .btn-win { background: white; color: #1abc9c; }
+        .btn-win:hover { background: #1abc9c; color: white; }
+        
+        .btn-shot { background: white; color: #3498db; }
+        .btn-shot:hover { background: #3498db; color: white; }
+        
+        .btn-goal { background: white; color: #f39c12; }
+        .btn-goal:hover { background: #f39c12; color: white; }
+        
+        .btn-foul { background: white; color: #95a5a6; }
+        .btn-foul:hover { background: #95a5a6; color: white; }
+        
+        .btn-corner { background: white; color: #9b59b6; }
+        .btn-corner:hover { background: #9b59b6; color: white; }
+        
+        .btn-throw { background: white; color: #1abc9c; }
+        .btn-throw:hover { background: #1abc9c; color: white; }
+        
+        .btn-gk { background: white; color: #34495e; }
+        .btn-gk:hover { background: #34495e; color: white; }
+        
+        .data-section {
+            padding: 25px;
+            border-top: 1px solid #e1e8ed;
+            background: white;
+        }
+        
+        .data-section h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .export-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn {
+            padding: 10px 20px;
+            background: white;
+            color: #2c3e50;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        
+        .export-btn:hover {
+            background: #1abc9c;
+            color: white;
+            border-color: #1abc9c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(26,188,156,0.3);
+        }
+        
+        .clear-btn {
+            background: white;
+            color: #e74c3c;
+            border-color: #e1e8ed;
+        }
+        
+        .clear-btn:hover {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            background: white;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        th {
+            background: #f5f7fa;
+            color: #2c3e50;
+            padding: 12px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #e1e8ed;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f3f5;
+            color: #2c3e50;
+        }
+        
+        tr:hover {
+            background: #f8fafb;
+        }
+        
+        .counter {
+            display: inline-block;
+            background: #1abc9c;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        
+        .delete-btn {
+            background: white;
+            color: #e74c3c;
+            border: 2px solid #e1e8ed;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .delete-btn:hover {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(44, 62, 80, 0.4);
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s;
+        }
+        
+        .modal-content-large {
+            max-width: 900px;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .modal-subheader {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        /* Player Grid Styles */
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f5f7fa;
+            border-radius: 10px;
+        }
+        
+        .player-btn {
+            padding: 15px;
+            background: white;
+            color: #2c3e50;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        
+        .player-btn:hover {
+            background: #1abc9c;
+            color: white;
+            border-color: #1abc9c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(26, 188, 156, 0.3);
+        }
+        
+        /* Field Zone Styles - Vertical 3x6 Layout */
+        .field-container {
+            margin-bottom: 20px;
+        }
+        
+        .modal-content-field {
+            max-width: 400px;
+        }
+        
+        .field-wrapper-vertical {
+            position: relative;
+            border: 4px solid #e67e22;
+            border-radius: 8px;
+            background: #4a5258;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+        
+        .field-grid-vertical {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .zone-vert {
+            aspect-ratio: 1.5;
+            background: #6c757d;
+            border: 2px solid #e67e22;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .zone-vert:hover {
+            background: #868e96;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(230, 126, 34, 0.6);
+            z-index: 10;
+        }
+        
+        .zone-vert.zone-center {
+            border-left: 3px solid #e67e22;
+            border-right: 3px solid #e67e22;
+        }
+        
+        .zone-vert.zone-darker {
+            background: #5a6268;
+        }
+        
+        /* Dashed lines between thirds */
+        .zone-vert.third-divide-bottom {
+            border-bottom: 3px dashed #e67e22;
+        }
+        
+        /* Goal boxes */
+        .goal-box {
+            height: 20px;
+            background: #4a5258;
+            border-left: 3px solid #e67e22;
+            border-right: 3px solid #e67e22;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .goal-box-top {
+            width: 50%;
+            border-top: 3px solid #e67e22;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        
+        .goal-box-top::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 12px;
+            border: 3px solid #e67e22;
+            border-bottom: none;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            background: #4a5258;
+        }
+        
+        .goal-box-bottom {
+            width: 50%;
+            border-bottom: 3px solid #e67e22;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+        
+        .goal-box-bottom::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 12px;
+            border: 3px solid #e67e22;
+            border-top: none;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+            background: #4a5258;
+        }
+        
+        .center-circle-vert {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border: 3px solid #e67e22;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            background: transparent;
+            z-index: 5;
+        }
+        
+        .center-circle-vert::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: #e67e22;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+        
+        /* Loss Type Grid Styles */
+        .loss-type-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f5f7fa;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        .loss-type-btn {
+            padding: 20px;
+            background: white;
+            color: #2c3e50;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        
+        .loss-type-btn:hover {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+        }
+        
+        /* Result Button Styles */
+        .result-complete {
+            color: #f39c12;
+        }
+        
+        .result-complete:hover {
+            background: #f39c12 !important;
+            border-color: #f39c12 !important;
+            color: white !important;
+            box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3) !important;
+        }
+        
+        .result-regain {
+            color: #1abc9c;
+        }
+        
+        .result-regain:hover {
+            background: #1abc9c !important;
+            border-color: #1abc9c !important;
+            color: white !important;
+            box-shadow: 0 4px 10px rgba(26, 188, 156, 0.3) !important;
+        }
+        
+        .result-foul {
+            color: #e74c3c;
+        }
+        
+        .result-foul:hover {
+            background: #e74c3c !important;
+            border-color: #e74c3c !important;
+            color: white !important;
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3) !important;
+        }
+        
+        .result-out {
+            color: #95a5a6;
+        }
+        
+        .result-out:hover {
+            background: #95a5a6 !important;
+            border-color: #95a5a6 !important;
+            color: white !important;
+            box-shadow: 0 4px 10px rgba(149, 165, 166, 0.3) !important;
+        }
+        
+        /* Stopwatch Styles */
+        .stopwatch-display {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            padding: 30px;
+            background: #f5f7fa;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .stopwatch-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .stopwatch-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            color: #1abc9c;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        
+        .stopwatch-btn:hover {
+            background: #1abc9c;
+            color: white;
+            border-color: #1abc9c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(26, 188, 156, 0.3);
+        }
+        
+        .stopwatch-btn.reset-stopwatch {
+            color: #95a5a6;
+        }
+        
+        .stopwatch-btn.reset-stopwatch:hover {
+            background: #95a5a6;
+            color: white;
+            border-color: #95a5a6;
+        }
+        
+        .stopwatch-btn.running {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+        
+        .stopwatch-btn.running:hover {
+            background: #c0392b;
+            border-color: #c0392b;
+        }
+        
+        /* Arrow Pad Styles */
+        .arrow-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 300px;
+            margin: 20px auto;
+            padding: 10px;
+            background: #f5f7fa;
+            border-radius: 12px;
+        }
+        
+        .arrow-btn {
+            aspect-ratio: 1;
+            background: white;
+            color: #2c3e50;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        
+        .arrow-btn:hover {
+            background: #1abc9c;
+            color: white;
+            border-color: #1abc9c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(26, 188, 156, 0.3);
+        }
+        
+        .arrow-center {
+            background: #e8ecef;
+            border-radius: 10px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .modal-btn-submit {
+            background: white;
+            color: #1abc9c;
+            border-color: #e1e8ed;
+        }
+        
+        .modal-btn-submit:hover {
+            background: #1abc9c;
+            color: white;
+            border-color: #1abc9c;
+        }
+        
+        .modal-btn-cancel {
+            background: white;
+            color: #95a5a6;
+            border-color: #e1e8ed;
+        }
+        
+        .modal-btn-cancel:hover {
+            background: #95a5a6;
+            color: white;
+            border-color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Game Details Landing Page -->
+    <div id="landingPage" class="landing-page">
+        <div class="landing-container">
+            <div class="landing-header">
+                <h1>Game Tagging Setup</h1>
+                <p>Enter game details to begin</p>
+            </div>
+            
+            <div class="landing-form">
+                <div class="form-field">
+                    <label for="gameDate">Date of Game</label>
+                    <input type="date" id="gameDate" required>
+                </div>
+                
+                <div class="form-field">
+                    <label for="opponent">Opponent</label>
+                    <input type="text" id="opponent" placeholder="Enter opponent team name" required>
+                </div>
+                
+                <div class="form-field">
+                    <label for="finalScore">Final Score</label>
+                    <input type="text" id="finalScore" placeholder="e.g., 3-1 or leave blank if ongoing" >
+                </div>
+                
+                <div class="form-field">
+                    <label for="competition">Competition</label>
+                    <select id="competition" required>
+                        <option value="">Select competition...</option>
+                        <option value="ECNL/RL">ECNL/RL</option>
+                        <option value="WPL">WPL</option>
+                        <option value="Tournament">Tournament</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <button class="landing-submit-btn" onclick="startTagging()">Start Tagging →</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container" id="mainContainer" style="display: none;">
+        <!-- Game Info Bar -->
+        <div class="game-info-bar" id="gameInfoBar">
+            <div class="game-info-item">
+                <span class="game-info-label">Date:</span>
+                <span class="game-info-value" id="displayDate">-</span>
+            </div>
+            <div class="game-info-item">
+                <span class="game-info-label">Opponent:</span>
+                <span class="game-info-value" id="displayOpponent">-</span>
+            </div>
+            <div class="game-info-item">
+                <span class="game-info-label">Score:</span>
+                <span class="game-info-value" id="displayScore">-</span>
+            </div>
+            <div class="game-info-item">
+                <span class="game-info-label">Competition:</span>
+                <span class="game-info-value" id="displayCompetition">-</span>
+            </div>
+            <button class="edit-game-btn" onclick="editGameDetails()">✏️ Edit</button>
+        </div>
+        
+        <div class="header">
+            <h1 style="margin: 0;">Game Tagging Pad</h1>
+            <div class="controls">
+                <label style="color: #2c3e50; font-size: 16px; margin-right: 10px;">Timestamp:</label>
+                <input type="text" id="timestampInput" placeholder="MM:SS" 
+                       style="padding: 10px; font-size: 18px; width: 120px; border-radius: 8px; border: 2px solid #e1e8ed; text-align: center; background: white; color: #2c3e50;"
+                       value="00:00">
+                <button class="timer-btn start-btn" onclick="incrementTime(10)">+10s</button>
+                <button class="timer-btn start-btn" onclick="incrementTime(30)">+30s</button>
+                <button class="timer-btn pause-btn" onclick="incrementTime(60)">+1min</button>
+                <button class="timer-btn reset-btn" onclick="resetTimestamp()">Reset</button>
+            </div>
+        </div>
+        
+        <div class="button-grid">
+            <button class="tag-button btn-loss" onclick="addTag('Loss')">Loss</button>
+            <button class="tag-button btn-win" onclick="addTag('Win')">Win</button>
+            <button class="tag-button btn-shot" onclick="addTag('Shot')">Shot</button>
+            <button class="tag-button btn-goal" onclick="addTag('Goal')">⚽ Goal</button>
+            <button class="tag-button btn-foul" onclick="addTag('Foul')">Foul</button>
+            <button class="tag-button btn-corner" onclick="addTag('Corner')">Corner</button>
+            <button class="tag-button btn-throw" onclick="addTag('Throw In')">Throw In</button>
+            <button class="tag-button btn-gk" onclick="addTag('GK Action')">GK Action</button>
+        </div>
+        
+        <div class="data-section">
+            <h2>Event Log <span class="counter" id="eventCount">0 events</span></h2>
+            <div class="export-controls">
+                <button class="export-btn" onclick="exportToExcel()">📊 Download Excel</button>
+                <button class="export-btn" onclick="exportToCSV()">📋 Copy CSV</button>
+                <button class="export-btn" onclick="exportToJSON()">💾 Copy JSON</button>
+                <button class="export-btn clear-btn" onclick="clearData()">🗑️ Clear All Data</button>
+            </div>
+            
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Timestamp</th>
+                            <th>Game Time</th>
+                            <th>Event Details</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataBody">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step 1: Player Selection Modal -->
+    <div id="playerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Who lost possession?</div>
+            <div class="modal-subheader">Select a player</div>
+            <div class="player-grid" id="playerGrid">
+                <!-- Players will be dynamically added here -->
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeLossModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step 2: Field Zone Selection Modal -->
+    <div id="zoneModal" class="modal">
+        <div class="modal-content modal-content-field">
+            <div class="modal-header">Loss Zone</div>
+            <div class="modal-subheader">Where was possession lost?</div>
+            <div class="field-container">
+                <div class="field-wrapper-vertical">
+                    <div class="goal-box goal-box-top"></div>
+                    
+                    <div class="field-grid-vertical">
+                        <!-- Top Row (Attacking) - Zones 16, 17, 18 -->
+                        <div class="zone-vert" data-zone="16" onclick="selectZone('Zone 16', 'Left Wing - Attacking')">16</div>
+                        <div class="zone-vert zone-center" data-zone="17" onclick="selectZone('Zone 17', 'Center - Attacking')">17</div>
+                        <div class="zone-vert" data-zone="18" onclick="selectZone('Zone 18', 'Right Wing - Attacking')">18</div>
+                        
+                        <!-- Row 2 - Zones 13, 14, 15 -->
+                        <div class="zone-vert third-divide-bottom" data-zone="13" onclick="selectZone('Zone 13', 'Left Wing - Attacking')">13</div>
+                        <div class="zone-vert zone-center third-divide-bottom zone-darker" data-zone="14" onclick="selectZone('Zone 14', 'Center - Attacking')">14</div>
+                        <div class="zone-vert third-divide-bottom" data-zone="15" onclick="selectZone('Zone 15', 'Right Wing - Attacking')">15</div>
+                        
+                        <!-- Row 3 - Zones 10, 11, 12 -->
+                        <div class="zone-vert" data-zone="10" onclick="selectZone('Zone 10', 'Left Wing - Middle')">10</div>
+                        <div class="zone-vert zone-center" data-zone="11" onclick="selectZone('Zone 11', 'Center - Middle')">11</div>
+                        <div class="zone-vert" data-zone="12" onclick="selectZone('Zone 12', 'Right Wing - Middle')">12</div>
+                        
+                        <!-- Row 4 - Zones 7, 8, 9 -->
+                        <div class="zone-vert third-divide-bottom" data-zone="7" onclick="selectZone('Zone 7', 'Left Wing - Middle')">7</div>
+                        <div class="zone-vert zone-center third-divide-bottom zone-darker" data-zone="8" onclick="selectZone('Zone 8', 'Center - Middle')">8</div>
+                        <div class="zone-vert third-divide-bottom" data-zone="9" onclick="selectZone('Zone 9', 'Right Wing - Middle')">9</div>
+                        
+                        <!-- Row 5 - Zones 4, 5, 6 -->
+                        <div class="zone-vert" data-zone="4" onclick="selectZone('Zone 4', 'Left Wing - Defensive')">4</div>
+                        <div class="zone-vert zone-center" data-zone="5" onclick="selectZone('Zone 5', 'Center - Defensive')">5</div>
+                        <div class="zone-vert" data-zone="6" onclick="selectZone('Zone 6', 'Right Wing - Defensive')">6</div>
+                        
+                        <!-- Bottom Row (Defensive) - Zones 1, 2, 3 -->
+                        <div class="zone-vert" data-zone="1" onclick="selectZone('Zone 1', 'Left Wing - Defensive')">1</div>
+                        <div class="zone-vert zone-center zone-darker" data-zone="2" onclick="selectZone('Zone 2', 'Center - Defensive')">2</div>
+                        <div class="zone-vert" data-zone="3" onclick="selectZone('Zone 3', 'Right Wing - Defensive')">3</div>
+                    </div>
+                    
+                    <div class="goal-box goal-box-bottom"></div>
+                    
+                    <!-- Center circle -->
+                    <div class="center-circle-vert"></div>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="goBackToPlayers()">← Back</button>
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeLossModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step 3: Loss Type Selection Modal -->
+    <div id="lossTypeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">How was possession lost?</div>
+            <div class="modal-subheader">Select loss type</div>
+            <div class="loss-type-grid">
+                <button class="loss-type-btn" onclick="selectLossType('Dispossessed')">Dispossessed</button>
+                <button class="loss-type-btn" onclick="selectLossType('Bad Touch')">Bad Touch</button>
+                <button class="loss-type-btn" onclick="selectLossType('Intercepted')">Intercepted</button>
+                <button class="loss-type-btn" onclick="selectLossType('Bad Pass')">Bad Pass</button>
+                <button class="loss-type-btn" onclick="selectLossType('Dribbled')">Dribbled</button>
+                <button class="loss-type-btn" onclick="selectLossType('Tackle')">Tackle</button>
+                <button class="loss-type-btn" onclick="selectLossType('Aerial Duel')">Aerial Duel</button>
+                <button class="loss-type-btn" onclick="selectLossType('Other')">Other</button>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="goBackToZones()">← Back</button>
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeLossModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step 4: Time to Press Stopwatch Modal -->
+    <div id="timeToPressModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Time to Press</div>
+            <div class="modal-subheader">Track how long until your team pressed</div>
+            <div class="stopwatch-display" id="stopwatchDisplay">00:00.0</div>
+            <div class="stopwatch-controls">
+                <button class="stopwatch-btn" id="startStopBtn" onclick="toggleStopwatch()">Start</button>
+                <button class="stopwatch-btn reset-stopwatch" onclick="resetStopwatch()">Reset</button>
+            </div>
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="goBackToLossType()">← Back</button>
+                <button type="button" class="modal-btn modal-btn-submit" onclick="saveTimeToPress()">Continue</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step 5: Pressing Player Selection Modal -->
+    <div id="pressingPlayerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Who pressed?</div>
+            <div class="modal-subheader">Select the pressing player</div>
+            <div class="player-grid" id="pressingPlayerGrid">
+                <!-- Players will be dynamically added here -->
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="goBackToTimeToPress()">← Back</button>
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeLossModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step 6: Opponent First Action Modal -->
+    <div id="opponentActionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Opponent's First Action</div>
+            <div class="modal-subheader">What did the opponent do?</div>
+            <div class="loss-type-grid">
+                <button class="loss-type-btn" onclick="selectOpponentAction('Pass')">Pass</button>
+                <button class="loss-type-btn" onclick="selectOpponentAction('Dribble')">Dribble</button>
+                <button class="loss-type-btn" onclick="selectOpponentAction('Shot')">Shot</button>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="goBackToPressingPlayer()">← Back</button>
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeLossModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step 7: Direction Selection Modal -->
+    <div id="directionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Direction of Action</div>
+            <div class="modal-subheader">Select the direction</div>
+            <div class="arrow-pad">
+                <div class="arrow-btn" onclick="selectDirection('Forward Left', '↖')">↖</div>
+                <div class="arrow-btn" onclick="selectDirection('Forward', '↑')">↑</div>
+                <div class="arrow-btn" onclick="selectDirection('Forward Right', '↗')">↗</div>
+                
+                <div class="arrow-btn" onclick="selectDirection('Left', '←')">←</div>
+                <div class="arrow-center"></div>
+                <div class="arrow-btn" onclick="selectDirection('Right', '→')">→</div>
+                
+                <div class="arrow-btn" onclick="selectDirection('Backward Left', '↙')">↙</div>
+                <div class="arrow-btn" onclick="selectDirection('Backward', '↓')">↓</div>
+                <div class="arrow-btn" onclick="selectDirection('Backward Right', '↘')">↘</div>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="goBackToOpponentAction()">← Back</button>
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeLossModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step 8: Result Selection Modal -->
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Result</div>
+            <div class="modal-subheader">What was the outcome?</div>
+            <div class="loss-type-grid">
+                <button class="loss-type-btn result-complete" onclick="selectResult('Complete')">Complete</button>
+                <button class="loss-type-btn result-regain" onclick="selectResult('Regain')">Regain</button>
+                <button class="loss-type-btn result-foul" onclick="selectResult('Foul')">Foul</button>
+                <button class="loss-type-btn result-out" onclick="selectResult('Out of Play')">Out of Play</button>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="goBackToDirection()">← Back</button>
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeLossModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step 9: Completion Zone Selection Modal (only if result is Complete) -->
+    <div id="completionZoneModal" class="modal">
+        <div class="modal-content modal-content-field">
+            <div class="modal-header">Opponent Action Completion Zone</div>
+            <div class="modal-subheader">Where was the action completed?</div>
+            <div class="field-container">
+                <div class="field-wrapper-vertical">
+                    <div class="goal-box goal-box-top"></div>
+                    
+                    <div class="field-grid-vertical">
+                        <!-- Top Row (Attacking) - Zones 16, 17, 18 -->
+                        <div class="zone-vert" data-zone="16" onclick="selectCompletionZone('Zone 16', 'Left Wing - Attacking')">16</div>
+                        <div class="zone-vert zone-center" data-zone="17" onclick="selectCompletionZone('Zone 17', 'Center - Attacking')">17</div>
+                        <div class="zone-vert" data-zone="18" onclick="selectCompletionZone('Zone 18', 'Right Wing - Attacking')">18</div>
+                        
+                        <!-- Row 2 - Zones 13, 14, 15 -->
+                        <div class="zone-vert third-divide-bottom" data-zone="13" onclick="selectCompletionZone('Zone 13', 'Left Wing - Attacking')">13</div>
+                        <div class="zone-vert zone-center third-divide-bottom zone-darker" data-zone="14" onclick="selectCompletionZone('Zone 14', 'Center - Attacking')">14</div>
+                        <div class="zone-vert third-divide-bottom" data-zone="15" onclick="selectCompletionZone('Zone 15', 'Right Wing - Attacking')">15</div>
+                        
+                        <!-- Row 3 - Zones 10, 11, 12 -->
+                        <div class="zone-vert" data-zone="10" onclick="selectCompletionZone('Zone 10', 'Left Wing - Middle')">10</div>
+                        <div class="zone-vert zone-center" data-zone="11" onclick="selectCompletionZone('Zone 11', 'Center - Middle')">11</div>
+                        <div class="zone-vert" data-zone="12" onclick="selectCompletionZone('Zone 12', 'Right Wing - Middle')">12</div>
+                        
+                        <!-- Row 4 - Zones 7, 8, 9 -->
+                        <div class="zone-vert third-divide-bottom" data-zone="7" onclick="selectCompletionZone('Zone 7', 'Left Wing - Middle')">7</div>
+                        <div class="zone-vert zone-center third-divide-bottom zone-darker" data-zone="8" onclick="selectCompletionZone('Zone 8', 'Center - Middle')">8</div>
+                        <div class="zone-vert third-divide-bottom" data-zone="9" onclick="selectCompletionZone('Zone 9', 'Right Wing - Middle')">9</div>
+                        
+                        <!-- Row 5 - Zones 4, 5, 6 -->
+                        <div class="zone-vert" data-zone="4" onclick="selectCompletionZone('Zone 4', 'Left Wing - Defensive')">4</div>
+                        <div class="zone-vert zone-center" data-zone="5" onclick="selectCompletionZone('Zone 5', 'Center - Defensive')">5</div>
+                        <div class="zone-vert" data-zone="6" onclick="selectCompletionZone('Zone 6', 'Right Wing - Defensive')">6</div>
+                        
+                        <!-- Bottom Row (Defensive) - Zones 1, 2, 3 -->
+                        <div class="zone-vert" data-zone="1" onclick="selectCompletionZone('Zone 1', 'Left Wing - Defensive')">1</div>
+                        <div class="zone-vert zone-center zone-darker" data-zone="2" onclick="selectCompletionZone('Zone 2', 'Center - Defensive')">2</div>
+                        <div class="zone-vert" data-zone="3" onclick="selectCompletionZone('Zone 3', 'Right Wing - Defensive')">3</div>
+                    </div>
+                    
+                    <div class="goal-box goal-box-bottom"></div>
+                    
+                    <!-- Center circle -->
+                    <div class="center-circle-vert"></div>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="goBackToResult()">← Back</button>
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeLossModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Regain Flow Modals (only if result is Regain) -->
+    <!-- Step 9a: Regain Player Selection Modal -->
+    <div id="regainPlayerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Who regained possession?</div>
+            <div class="modal-subheader">Select the regain player</div>
+            <div class="player-grid" id="regainPlayerGrid">
+                <!-- Players will be dynamically added here -->
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="goBackToResult()">← Back</button>
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeLossModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step 9b: Regain Type Selection Modal -->
+    <div id="regainTypeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">How was possession regained?</div>
+            <div class="modal-subheader">Select regain type</div>
+            <div class="loss-type-grid">
+                <button class="loss-type-btn" onclick="selectRegainType('Dispossessed')">Dispossessed</button>
+                <button class="loss-type-btn" onclick="selectRegainType('Bad Touch')">Bad Touch</button>
+                <button class="loss-type-btn" onclick="selectRegainType('Intercepted')">Intercepted</button>
+                <button class="loss-type-btn" onclick="selectRegainType('Bad Pass')">Bad Pass</button>
+                <button class="loss-type-btn" onclick="selectRegainType('Dribbled')">Dribbled</button>
+                <button class="loss-type-btn" onclick="selectRegainType('Tackle')">Tackle</button>
+                <button class="loss-type-btn" onclick="selectRegainType('Aerial Duel')">Aerial Duel</button>
+                <button class="loss-type-btn" onclick="selectRegainType('Other')">Other</button>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="goBackToRegainPlayer()">← Back</button>
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeLossModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step 9c: Regain Zone Selection Modal -->
+    <div id="regainZoneModal" class="modal">
+        <div class="modal-content modal-content-field">
+            <div class="modal-header">Regain Zone</div>
+            <div class="modal-subheader">Where was possession regained?</div>
+            <div class="field-container">
+                <div class="field-wrapper-vertical">
+                    <div class="goal-box goal-box-top"></div>
+                    
+                    <div class="field-grid-vertical">
+                        <!-- Top Row (Attacking) - Zones 16, 17, 18 -->
+                        <div class="zone-vert" data-zone="16" onclick="selectRegainZone('Zone 16', 'Left Wing - Attacking')">16</div>
+                        <div class="zone-vert zone-center" data-zone="17" onclick="selectRegainZone('Zone 17', 'Center - Attacking')">17</div>
+                        <div class="zone-vert" data-zone="18" onclick="selectRegainZone('Zone 18', 'Right Wing - Attacking')">18</div>
+                        
+                        <!-- Row 2 - Zones 13, 14, 15 -->
+                        <div class="zone-vert third-divide-bottom" data-zone="13" onclick="selectRegainZone('Zone 13', 'Left Wing - Attacking')">13</div>
+                        <div class="zone-vert zone-center third-divide-bottom zone-darker" data-zone="14" onclick="selectRegainZone('Zone 14', 'Center - Attacking')">14</div>
+                        <div class="zone-vert third-divide-bottom" data-zone="15" onclick="selectRegainZone('Zone 15', 'Right Wing - Attacking')">15</div>
+                        
+                        <!-- Row 3 - Zones 10, 11, 12 -->
+                        <div class="zone-vert" data-zone="10" onclick="selectRegainZone('Zone 10', 'Left Wing - Middle')">10</div>
+                        <div class="zone-vert zone-center" data-zone="11" onclick="selectRegainZone('Zone 11', 'Center - Middle')">11</div>
+                        <div class="zone-vert" data-zone="12" onclick="selectRegainZone('Zone 12', 'Right Wing - Middle')">12</div>
+                        
+                        <!-- Row 4 - Zones 7, 8, 9 -->
+                        <div class="zone-vert third-divide-bottom" data-zone="7" onclick="selectRegainZone('Zone 7', 'Left Wing - Middle')">7</div>
+                        <div class="zone-vert zone-center third-divide-bottom zone-darker" data-zone="8" onclick="selectRegainZone('Zone 8', 'Center - Middle')">8</div>
+                        <div class="zone-vert third-divide-bottom" data-zone="9" onclick="selectRegainZone('Zone 9', 'Right Wing - Middle')">9</div>
+                        
+                        <!-- Row 5 - Zones 4, 5, 6 -->
+                        <div class="zone-vert" data-zone="4" onclick="selectRegainZone('Zone 4', 'Left Wing - Defensive')">4</div>
+                        <div class="zone-vert zone-center" data-zone="5" onclick="selectRegainZone('Zone 5', 'Center - Defensive')">5</div>
+                        <div class="zone-vert" data-zone="6" onclick="selectRegainZone('Zone 6', 'Right Wing - Defensive')">6</div>
+                        
+                        <!-- Bottom Row (Defensive) - Zones 1, 2, 3 -->
+                        <div class="zone-vert" data-zone="1" onclick="selectRegainZone('Zone 1', 'Left Wing - Defensive')">1</div>
+                        <div class="zone-vert zone-center zone-darker" data-zone="2" onclick="selectRegainZone('Zone 2', 'Center - Defensive')">2</div>
+                        <div class="zone-vert" data-zone="3" onclick="selectRegainZone('Zone 3', 'Right Wing - Defensive')">3</div>
+                    </div>
+                    
+                    <div class="goal-box goal-box-bottom"></div>
+                    
+                    <!-- Center circle -->
+                    <div class="center-circle-vert"></div>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="goBackToRegainType()">← Back</button>
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeLossModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let events = [];
+        let eventCounter = 0;
+        
+        // Game details
+        let gameDetails = {
+            date: '',
+            opponent: '',
+            score: '',
+            competition: ''
+        };
+        
+        // Start tagging function
+        function startTagging() {
+            const date = document.getElementById('gameDate').value;
+            const opponent = document.getElementById('opponent').value;
+            const score = document.getElementById('finalScore').value;
+            const competition = document.getElementById('competition').value;
+            
+            // Validate required fields
+            if (!date || !opponent || !competition) {
+                alert('Please fill in Date, Opponent, and Competition fields.');
+                return;
+            }
+            
+            // Store game details
+            gameDetails = {
+                date: date,
+                opponent: opponent,
+                score: score || 'TBD',
+                competition: competition
+            };
+            
+            // Update display
+            document.getElementById('displayDate').textContent = new Date(date).toLocaleDateString();
+            document.getElementById('displayOpponent').textContent = opponent;
+            document.getElementById('displayScore').textContent = score || 'TBD';
+            document.getElementById('displayCompetition').textContent = competition;
+            
+            // Hide landing page, show main container
+            document.getElementById('landingPage').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+            saveData(); // Auto-save game details
+        }
+        
+        // Edit game details function
+        function editGameDetails() {
+            // Pre-fill form with current values
+            document.getElementById('gameDate').value = gameDetails.date;
+            document.getElementById('opponent').value = gameDetails.opponent;
+            document.getElementById('finalScore').value = gameDetails.score === 'TBD' ? '' : gameDetails.score;
+            document.getElementById('competition').value = gameDetails.competition;
+            
+            // Show landing page, hide main container
+            document.getElementById('landingPage').style.display = 'flex';
+            document.getElementById('mainContainer').style.display = 'none';
+        }
+        
+        // Player roster - CWS Girls Team
+        let players = [
+            'Ailsey', 'Allanah', 'Alondra', 'Ashelyn', 'Briella',
+            'Brooklyn', 'Chantel', 'Emily', 'Isabella', 'Kennedy',
+            'Kinsley', 'Macy', 'Reign', 'Savannah', 'Teige', 'Zoey'
+        ];
+        
+        // Loss tracking variables
+        let currentLossData = {
+            player: '',
+            zone: '',
+            zoneCode: '',
+            lossType: '',
+            timeToPress: '',
+            pressingPlayer: '',
+            opponentAction: '',
+            direction: '',
+            result: '',
+            completionZone: '',
+            completionZoneCode: '',
+            regainPlayer: '',
+            regainType: '',
+            regainZone: '',
+            regainZoneCode: ''
+        };
+        
+        // Stopwatch variables
+        let stopwatchInterval = null;
+        let stopwatchTime = 0;
+        let stopwatchRunning = false;
+        
+        // Initialize player grid
+        function initializePlayers() {
+            const playerGrid = document.getElementById('playerGrid');
+            playerGrid.innerHTML = '';
+            players.forEach(player => {
+                const btn = document.createElement('button');
+                btn.className = 'player-btn';
+                btn.textContent = player;
+                btn.onclick = () => selectPlayer(player);
+                playerGrid.appendChild(btn);
+            });
+        }
+        
+        // Initialize pressing player grid
+        function initializePressingPlayers() {
+            const playerGrid = document.getElementById('pressingPlayerGrid');
+            playerGrid.innerHTML = '';
+            players.forEach(player => {
+                const btn = document.createElement('button');
+                btn.className = 'player-btn';
+                btn.textContent = player;
+                btn.onclick = () => selectPressingPlayer(player);
+                playerGrid.appendChild(btn);
+            });
+        }
+        
+        // Initialize regain player grid
+        function initializeRegainPlayers() {
+            const playerGrid = document.getElementById('regainPlayerGrid');
+            playerGrid.innerHTML = '';
+            players.forEach(player => {
+                const btn = document.createElement('button');
+                btn.className = 'player-btn';
+                btn.textContent = player;
+                btn.onclick = () => selectRegainPlayer(player);
+                playerGrid.appendChild(btn);
+            });
+        }
+        
+        // Timestamp functions
+        function parseTimestamp(timestamp) {
+            const parts = timestamp.split(':');
+            if (parts.length === 2) {
+                const minutes = parseInt(parts[0]) || 0;
+                const seconds = parseInt(parts[1]) || 0;
+                return minutes * 60 + seconds;
+            }
+            return 0;
+        }
+        
+        function formatTimestamp(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        
+        function getCurrentTimestamp() {
+            const input = document.getElementById('timestampInput');
+            return input.value || '00:00';
+        }
+        
+        function incrementTime(seconds) {
+            const input = document.getElementById('timestampInput');
+            const currentSeconds = parseTimestamp(input.value);
+            const newSeconds = currentSeconds + seconds;
+            input.value = formatTimestamp(newSeconds);
+        }
+        
+        function resetTimestamp() {
+            document.getElementById('timestampInput').value = '00:00';
+        }
+        
+        // Three-step loss modal functions
+        function openPlayerModal() {
+            currentLossData = { player: '', zone: '', zoneCode: '', lossType: '', timeToPress: '', pressingPlayer: '', opponentAction: '', direction: '', result: '', completionZone: '', completionZoneCode: '', regainPlayer: '', regainType: '', regainZone: '', regainZoneCode: '' };
+            document.getElementById('playerModal').style.display = 'block';
+        }
+        
+        function selectPlayer(player) {
+            currentLossData.player = player;
+            document.getElementById('playerModal').style.display = 'none';
+            document.getElementById('zoneModal').style.display = 'block';
+        }
+        
+        function selectZone(zoneCode, zoneName) {
+            currentLossData.zone = zoneName;
+            currentLossData.zoneCode = zoneCode;
+            document.getElementById('zoneModal').style.display = 'none';
+            document.getElementById('lossTypeModal').style.display = 'block';
+        }
+        
+        function selectLossType(lossType) {
+            currentLossData.lossType = lossType;
+            document.getElementById('lossTypeModal').style.display = 'none';
+            // Reset and show stopwatch
+            resetStopwatch();
+            document.getElementById('timeToPressModal').style.display = 'block';
+        }
+        
+        // Stopwatch functions
+        function toggleStopwatch() {
+            if (stopwatchRunning) {
+                // Stop
+                stopStopwatch();
+            } else {
+                // Start
+                startStopwatch();
+            }
+        }
+        
+        function startStopwatch() {
+            stopwatchRunning = true;
+            document.getElementById('startStopBtn').textContent = 'Stop';
+            document.getElementById('startStopBtn').classList.add('running');
+            
+            stopwatchInterval = setInterval(() => {
+                stopwatchTime += 100; // Increment by 100ms
+                updateStopwatchDisplay();
+            }, 100);
+        }
+        
+        function stopStopwatch() {
+            stopwatchRunning = false;
+            document.getElementById('startStopBtn').textContent = 'Start';
+            document.getElementById('startStopBtn').classList.remove('running');
+            
+            if (stopwatchInterval) {
+                clearInterval(stopwatchInterval);
+                stopwatchInterval = null;
+            }
+        }
+        
+        function resetStopwatch() {
+            stopStopwatch();
+            stopwatchTime = 0;
+            updateStopwatchDisplay();
+        }
+        
+        function updateStopwatchDisplay() {
+            const seconds = Math.floor(stopwatchTime / 1000);
+            const milliseconds = Math.floor((stopwatchTime % 1000) / 100);
+            const display = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}.${milliseconds}`;
+            document.getElementById('stopwatchDisplay').textContent = display;
+        }
+        
+        function saveTimeToPress() {
+            stopStopwatch();
+            currentLossData.timeToPress = document.getElementById('stopwatchDisplay').textContent;
+            document.getElementById('timeToPressModal').style.display = 'none';
+            document.getElementById('pressingPlayerModal').style.display = 'block';
+        }
+        
+        function selectPressingPlayer(player) {
+            currentLossData.pressingPlayer = player;
+            document.getElementById('pressingPlayerModal').style.display = 'none';
+            document.getElementById('opponentActionModal').style.display = 'block';
+        }
+        
+        function selectOpponentAction(action) {
+            currentLossData.opponentAction = action;
+            document.getElementById('opponentActionModal').style.display = 'none';
+            document.getElementById('directionModal').style.display = 'block';
+        }
+        
+        function selectDirection(direction, arrow) {
+            currentLossData.direction = direction;
+            currentLossData.directionArrow = arrow;
+            document.getElementById('directionModal').style.display = 'none';
+            document.getElementById('resultModal').style.display = 'block';
+        }
+        
+        function selectResult(result) {
+            currentLossData.result = result;
+            
+            if (result === 'Complete') {
+                // Show completion zone modal
+                document.getElementById('resultModal').style.display = 'none';
+                document.getElementById('completionZoneModal').style.display = 'block';
+            } else if (result === 'Regain') {
+                // Show regain player modal
+                document.getElementById('resultModal').style.display = 'none';
+                document.getElementById('regainPlayerModal').style.display = 'block';
+            } else {
+                // For Foul or Out of Play - log the event and end
+                addTagWithDetails('Loss', {
+                    player: currentLossData.player,
+                    zone: currentLossData.zone,
+                    zoneCode: currentLossData.zoneCode,
+                    lossType: currentLossData.lossType,
+                    timeToPress: currentLossData.timeToPress,
+                    pressingPlayer: currentLossData.pressingPlayer,
+                    opponentAction: currentLossData.opponentAction,
+                    direction: currentLossData.direction,
+                    directionArrow: currentLossData.directionArrow,
+                    result: currentLossData.result,
+                    completionZone: '',
+                    completionZoneCode: '',
+                    regainPlayer: '',
+                    regainType: '',
+                    regainZone: '',
+                    regainZoneCode: ''
+                });
+                
+                closeLossModals();
+            }
+        }
+        
+        function selectRegainPlayer(player) {
+            currentLossData.regainPlayer = player;
+            document.getElementById('regainPlayerModal').style.display = 'none';
+            document.getElementById('regainTypeModal').style.display = 'block';
+        }
+        
+        function selectRegainType(type) {
+            currentLossData.regainType = type;
+            document.getElementById('regainTypeModal').style.display = 'none';
+            document.getElementById('regainZoneModal').style.display = 'block';
+        }
+        
+        function selectRegainZone(zoneCode, zoneName) {
+            currentLossData.regainZone = zoneName;
+            currentLossData.regainZoneCode = zoneCode;
+            
+            // Now we have all the information, log the event
+            addTagWithDetails('Loss', {
+                player: currentLossData.player,
+                zone: currentLossData.zone,
+                zoneCode: currentLossData.zoneCode,
+                lossType: currentLossData.lossType,
+                timeToPress: currentLossData.timeToPress,
+                pressingPlayer: currentLossData.pressingPlayer,
+                opponentAction: currentLossData.opponentAction,
+                direction: currentLossData.direction,
+                directionArrow: currentLossData.directionArrow,
+                result: currentLossData.result,
+                completionZone: '',
+                completionZoneCode: '',
+                regainPlayer: currentLossData.regainPlayer,
+                regainType: currentLossData.regainType,
+                regainZone: currentLossData.regainZone,
+                regainZoneCode: currentLossData.regainZoneCode
+            });
+            
+            closeLossModals();
+        }
+        
+        function selectCompletionZone(zoneCode, zoneName) {
+            currentLossData.completionZone = zoneName;
+            currentLossData.completionZoneCode = zoneCode;
+            
+            // Now we have all the information, log the event
+            addTagWithDetails('Loss', {
+                player: currentLossData.player,
+                zone: currentLossData.zone,
+                zoneCode: currentLossData.zoneCode,
+                lossType: currentLossData.lossType,
+                timeToPress: currentLossData.timeToPress,
+                pressingPlayer: currentLossData.pressingPlayer,
+                opponentAction: currentLossData.opponentAction,
+                direction: currentLossData.direction,
+                directionArrow: currentLossData.directionArrow,
+                result: currentLossData.result,
+                completionZone: currentLossData.completionZone,
+                completionZoneCode: currentLossData.completionZoneCode,
+                regainPlayer: '',
+                regainType: '',
+                regainZone: '',
+                regainZoneCode: ''
+            });
+            
+            closeLossModals();
+        }
+        
+        function goBackToPlayers() {
+            document.getElementById('zoneModal').style.display = 'none';
+            document.getElementById('playerModal').style.display = 'block';
+        }
+        
+        function goBackToZones() {
+            document.getElementById('lossTypeModal').style.display = 'none';
+            document.getElementById('zoneModal').style.display = 'block';
+        }
+        
+        function goBackToLossType() {
+            stopStopwatch();
+            document.getElementById('timeToPressModal').style.display = 'none';
+            document.getElementById('lossTypeModal').style.display = 'block';
+        }
+        
+        function goBackToTimeToPress() {
+            document.getElementById('pressingPlayerModal').style.display = 'none';
+            document.getElementById('timeToPressModal').style.display = 'block';
+        }
+        
+        function goBackToPressingPlayer() {
+            document.getElementById('opponentActionModal').style.display = 'none';
+            document.getElementById('pressingPlayerModal').style.display = 'block';
+        }
+        
+        function goBackToOpponentAction() {
+            document.getElementById('directionModal').style.display = 'none';
+            document.getElementById('opponentActionModal').style.display = 'block';
+        }
+        
+        function goBackToDirection() {
+            document.getElementById('resultModal').style.display = 'none';
+            document.getElementById('directionModal').style.display = 'block';
+        }
+        
+        function goBackToResult() {
+            document.getElementById('completionZoneModal').style.display = 'none';
+            document.getElementById('regainPlayerModal').style.display = 'none';
+            document.getElementById('resultModal').style.display = 'block';
+        }
+        
+        function goBackToRegainPlayer() {
+            document.getElementById('regainTypeModal').style.display = 'none';
+            document.getElementById('regainPlayerModal').style.display = 'block';
+        }
+        
+        function goBackToRegainType() {
+            document.getElementById('regainZoneModal').style.display = 'none';
+            document.getElementById('regainTypeModal').style.display = 'block';
+        }
+        
+        function closeLossModals() {
+            stopStopwatch();
+            document.getElementById('playerModal').style.display = 'none';
+            document.getElementById('zoneModal').style.display = 'none';
+            document.getElementById('lossTypeModal').style.display = 'none';
+            document.getElementById('timeToPressModal').style.display = 'none';
+            document.getElementById('pressingPlayerModal').style.display = 'none';
+            document.getElementById('opponentActionModal').style.display = 'none';
+            document.getElementById('directionModal').style.display = 'none';
+            document.getElementById('resultModal').style.display = 'none';
+            document.getElementById('completionZoneModal').style.display = 'none';
+            document.getElementById('regainPlayerModal').style.display = 'none';
+            document.getElementById('regainTypeModal').style.display = 'none';
+            document.getElementById('regainZoneModal').style.display = 'none';
+            currentLossData = { player: '', zone: '', zoneCode: '', lossType: '', timeToPress: '', pressingPlayer: '', opponentAction: '', direction: '', result: '', completionZone: '', completionZoneCode: '', regainPlayer: '', regainType: '', regainZone: '', regainZoneCode: '' };
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                closeLossModals();
+            }
+        }
+        
+        function addTag(eventType) {
+            // If it's a loss, open the player modal
+            if (eventType === 'Loss') {
+                openPlayerModal();
+                return;
+            }
+            
+            // For other events, proceed normally
+            addTagWithDetails(eventType, null);
+        }
+        
+        function addTagWithDetails(eventType, details) {
+            const gameTime = getCurrentTimestamp();
+            
+            // Validate timestamp format
+            if (!gameTime.match(/^\d{1,3}:\d{2}$/)) {
+                alert('Please enter timestamp in MM:SS format');
+                return;
+            }
+            
+            eventCounter++;
+            const now = new Date();
+            const timestamp = now.toLocaleTimeString();
+            
+            const event = {
+                id: eventCounter,
+                timestamp: timestamp,
+                gameTime: gameTime,
+                event: eventType,
+                details: details,
+                rawTime: now.getTime()
+            };
+            
+            events.push(event);
+            updateTable();
+            updateCounter();
+            saveData(); // Auto-save after adding event
+        }
+        
+        function updateTable() {
+            const tbody = document.getElementById('dataBody');
+            tbody.innerHTML = '';
+            
+            // Reverse to show newest first
+            const reversedEvents = [...events].reverse();
+            
+            reversedEvents.forEach(event => {
+                const row = tbody.insertRow();
+                let eventDisplay = event.event;
+                
+                // If there are details, format them nicely
+                if (event.details) {
+                    eventDisplay += `<br><small style="color: #7f8c8d;">`;
+                    eventDisplay += `Player: ${event.details.player}<br>`;
+                    eventDisplay += `Loss Zone: ${event.details.zoneCode} (${event.details.zone})<br>`;
+                    eventDisplay += `Type: ${event.details.lossType}<br>`;
+                    eventDisplay += `Time to Press: ${event.details.timeToPress}<br>`;
+                    eventDisplay += `Pressing Player: ${event.details.pressingPlayer}<br>`;
+                    eventDisplay += `Opponent Action: ${event.details.opponentAction}<br>`;
+                    eventDisplay += `Direction: ${event.details.directionArrow || ''} ${event.details.direction}<br>`;
+                    eventDisplay += `Result: ${event.details.result}`;
+                    if (event.details.completionZoneCode) {
+                        eventDisplay += `<br>Opponent Action Completion Zone: ${event.details.completionZoneCode} (${event.details.completionZone})`;
+                    }
+                    if (event.details.regainPlayer) {
+                        eventDisplay += `<br>Regain Player: ${event.details.regainPlayer}`;
+                        eventDisplay += `<br>Regain Type: ${event.details.regainType}`;
+                        eventDisplay += `<br>Regain Zone: ${event.details.regainZoneCode} (${event.details.regainZone})`;
+                    }
+                    eventDisplay += `</small>`;
+                }
+                
+                row.innerHTML = `
+                    <td>${event.id}</td>
+                    <td>${event.timestamp}</td>
+                    <td>${event.gameTime}</td>
+                    <td>${eventDisplay}</td>
+                    <td><button class="delete-btn" onclick="deleteEvent(${event.id})">Delete</button></td>
+                `;
+            });
+        }
+        
+        function deleteEvent(id) {
+            events = events.filter(e => e.id !== id);
+            updateTable();
+            updateCounter();
+            saveData(); // Auto-save after deleting event
+        }
+        
+        function updateCounter() {
+            document.getElementById('eventCount').textContent = `${events.length} events`;
+        }
+        
+        function clearData() {
+            if (confirm('Are you sure you want to clear all data?')) {
+                events = [];
+                eventCounter = 0;
+                updateTable();
+                updateCounter();
+                saveData(); // Auto-save after clearing data
+            }
+        }
+        
+        function exportToExcel() {
+            if (events.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+            
+            try {
+                // Check if XLSX library is loaded
+                if (typeof XLSX === 'undefined') {
+                    alert('Excel library not loaded. Please refresh the page and try again.');
+                    return;
+                }
+                
+                // Prepare data for Excel
+                const excelData = events.map(event => ({
+                    'Game Date': gameDetails.date,
+                    'Opponent': gameDetails.opponent,
+                    'Score': gameDetails.score,
+                    'Competition': gameDetails.competition,
+                    'ID': event.id,
+                    'Timestamp': event.timestamp,
+                    'Game Time': event.gameTime,
+                    'Event': event.event,
+                    'Player': event.details ? event.details.player : '',
+                    'Loss Zone Code': event.details ? event.details.zoneCode : '',
+                    'Loss Zone Description': event.details ? event.details.zone : '',
+                    'Loss Type': event.details ? event.details.lossType : '',
+                    'Time to Press': event.details ? event.details.timeToPress : '',
+                    'Pressing Player': event.details ? event.details.pressingPlayer : '',
+                    'Opponent Action': event.details ? event.details.opponentAction : '',
+                    'Direction': event.details ? event.details.direction : '',
+                    'Result': event.details ? event.details.result : '',
+                    'Opponent Action Completion Zone Code': event.details ? event.details.completionZoneCode : '',
+                    'Opponent Action Completion Zone': event.details ? event.details.completionZone : '',
+                    'Regain Player': event.details ? event.details.regainPlayer : '',
+                    'Regain Type': event.details ? event.details.regainType : '',
+                    'Regain Zone Code': event.details ? event.details.regainZoneCode : '',
+                    'Regain Zone': event.details ? event.details.regainZone : ''
+                }));
+                
+                // Create workbook and worksheet
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(excelData);
+                
+                // Set column widths
+                ws['!cols'] = [
+                    { wch: 12 },  // Game Date
+                    { wch: 20 },  // Opponent
+                    { wch: 10 },  // Score
+                    { wch: 15 },  // Competition
+                    { wch: 5 },   // ID
+                    { wch: 15 },  // Timestamp
+                    { wch: 12 },  // Game Time
+                    { wch: 10 },  // Event
+                    { wch: 15 },  // Player
+                    { wch: 15 },  // Loss Zone Code
+                    { wch: 30 },  // Loss Zone Description
+                    { wch: 15 },  // Loss Type
+                    { wch: 15 },  // Time to Press
+                    { wch: 15 },  // Pressing Player
+                    { wch: 18 },  // Opponent Action
+                    { wch: 18 },  // Direction
+                    { wch: 12 },  // Result
+                    { wch: 20 },  // Opponent Action Completion Zone Code
+                    { wch: 35 },  // Opponent Action Completion Zone
+                    { wch: 15 },  // Regain Player
+                    { wch: 15 },  // Regain Type
+                    { wch: 18 },  // Regain Zone Code
+                    { wch: 30 }   // Regain Zone
+                ];
+                
+                // Add worksheet to workbook
+                XLSX.utils.book_append_sheet(wb, ws, "Game Tags");
+                
+                // Generate filename with opponent and date
+                const cleanOpponent = gameDetails.opponent.replace(/[^a-zA-Z0-9]/g, '_');
+                const filename = `${gameDetails.date}_vs_${cleanOpponent}.xlsx`;
+                
+                // Write the file using blob method for better compatibility
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                
+                // Create download link
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Cleanup
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+            } catch (error) {
+                console.error('Excel export error:', error);
+                alert('Export failed: ' + error.message + '\n\nTry using "Copy CSV" instead and paste into Excel.');
+            }
+        }
+        
+        function exportToCSV() {
+            if (events.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+            
+            let csv = 'Game Date,Opponent,Score,Competition,ID,Timestamp,Game Time,Event,Player,Loss Zone Code,Loss Zone Description,Loss Type,Time to Press,Pressing Player,Opponent Action,Direction,Result,Opponent Action Completion Zone Code,Opponent Action Completion Zone,Regain Player,Regain Type,Regain Zone Code,Regain Zone\n';
+            events.forEach(event => {
+                const player = event.details ? event.details.player : '';
+                const zoneCode = event.details ? event.details.zoneCode : '';
+                const zone = event.details ? event.details.zone : '';
+                const lossType = event.details ? event.details.lossType : '';
+                const timeToPress = event.details ? event.details.timeToPress : '';
+                const pressingPlayer = event.details ? event.details.pressingPlayer : '';
+                const opponentAction = event.details ? event.details.opponentAction : '';
+                const direction = event.details ? event.details.direction : '';
+                const result = event.details ? event.details.result : '';
+                const completionZoneCode = event.details ? event.details.completionZoneCode : '';
+                const completionZone = event.details ? event.details.completionZone : '';
+                const regainPlayer = event.details ? event.details.regainPlayer : '';
+                const regainType = event.details ? event.details.regainType : '';
+                const regainZoneCode = event.details ? event.details.regainZoneCode : '';
+                const regainZone = event.details ? event.details.regainZone : '';
+                csv += `"${gameDetails.date}","${gameDetails.opponent}","${gameDetails.score}","${gameDetails.competition}",${event.id},"${event.timestamp}","${event.gameTime}","${event.event}","${player}","${zoneCode}","${zone}","${lossType}","${timeToPress}","${pressingPlayer}","${opponentAction}","${direction}","${result}","${completionZoneCode}","${completionZone}","${regainPlayer}","${regainType}","${regainZoneCode}","${regainZone}"\n`;
+            });
+            
+            // Create a text area to copy from
+            const textArea = document.createElement('textarea');
+            textArea.value = csv;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                // Show a custom modal with the CSV data
+                showCopyModal(csv, 'CSV');
+            } catch (err) {
+                document.body.removeChild(textArea);
+                alert('Export failed. Please try again or use a different browser.');
+            }
+        }
+        
+        function exportToJSON() {
+            if (events.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+            
+            const json = JSON.stringify(events, null, 2);
+            
+            // Create a text area to copy from
+            const textArea = document.createElement('textarea');
+            textArea.value = json;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                // Show a custom modal with the JSON data
+                showCopyModal(json, 'JSON');
+            } catch (err) {
+                document.body.removeChild(textArea);
+                alert('Export failed. Please try again or use a different browser.');
+            }
+        }
+        
+        function showCopyModal(data, format) {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">${format} Data Copied!</div>
+                    <div class="modal-subheader">The data has been copied to your clipboard. You can now paste it into Excel, Google Sheets, or a text editor.</div>
+                    <div style="margin: 20px 0;">
+                        <textarea readonly style="width: 100%; height: 200px; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 12px;">${data}</textarea>
+                    </div>
+                    <div class="modal-buttons">
+                        <button class="modal-btn modal-btn-submit" onclick="this.closest('.modal').remove()">Close</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close on outside click
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+        }
+        
+        // Initialize
+        initializePlayers();
+        initializePressingPlayers();
+        initializeRegainPlayers();
+        updateCounter();
+        
+        // Set today's date as default
+        document.getElementById('gameDate').valueAsDate = new Date();
+        
+        // Allow Enter key to work in timestamp field
+        document.getElementById('timestampInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+        
+        // PWA: Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+        
+        // PWA: Load saved data from localStorage on startup
+        function loadSavedData() {
+            const savedEvents = localStorage.getItem('tagPadEvents');
+            const savedGameDetails = localStorage.getItem('tagPadGameDetails');
+            
+            if (savedEvents) {
+                try {
+                    events = JSON.parse(savedEvents);
+                    if (events.length > 0) {
+                        eventCounter = Math.max(...events.map(e => e.id));
+                    }
+                    updateTable();
+                    updateCounter();
+                } catch (e) {
+                    console.error('Error loading saved events:', e);
+                }
+            }
+            
+            if (savedGameDetails) {
+                try {
+                    const saved = JSON.parse(savedGameDetails);
+                    if (saved.date && saved.opponent && saved.competition) {
+                        gameDetails = saved;
+                        document.getElementById('displayDate').textContent = new Date(saved.date).toLocaleDateString();
+                        document.getElementById('displayOpponent').textContent = saved.opponent;
+                        document.getElementById('displayScore').textContent = saved.score;
+                        document.getElementById('displayCompetition').textContent = saved.competition;
+                        document.getElementById('landingPage').style.display = 'none';
+                        document.getElementById('mainContainer').style.display = 'block';
+                    }
+                } catch (e) {
+                    console.error('Error loading saved game details:', e);
+                }
+            }
+        }
+        
+        // PWA: Auto-save data to localStorage whenever it changes
+        function saveData() {
+            try {
+                localStorage.setItem('tagPadEvents', JSON.stringify(events));
+                localStorage.setItem('tagPadGameDetails', JSON.stringify(gameDetails));
+            } catch (e) {
+                console.error('Error saving data:', e);
+            }
+        }
+        
+        // Load saved data on startup
+        loadSavedData();
+        
+        // PWA: Show install prompt
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install button if not already installed
+            const installBtn = document.createElement('button');
+            installBtn.textContent = '📱 Install App';
+            installBtn.className = 'install-btn';
+            installBtn.style.cssText = 'position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; background: #1abc9c; color: white; border: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 12px rgba(26,188,156,0.4); cursor: pointer; z-index: 1000;';
+            installBtn.onclick = async () => {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response: ${outcome}`);
+                deferredPrompt = null;
+                installBtn.remove();
+            };
+            document.body.appendChild(installBtn);
+        });
+    </script>
+</body>
+</html>
